@@ -28,10 +28,24 @@ def course_api_detail_view(request, pk):
         else:
             return Response(course_serilize.errors)
     elif request.method == "PUT":
-        course_serilize = CourseDetailSerializer(course, data=request.data)
-        course_serilize.is_valid(raise_exception=True)
-        course_serilize.save()
-        return Response(course_serilize.data)
+        # Separate files from request.data
+        files = request.FILES
+        data = request.data.copy()
+        data.pop('file_field_name', None)  # Remove file field from data
+
+        course_serilize = CourseDetailSerializer(course, data=data)
+
+        if course_serilize.is_valid():
+            course_serilize.save()
+
+            # Handle file upload separately if needed
+            # files = request.FILES.getlist('file_field_name')
+            # for file in files:
+            #     handle_uploaded_file(file)
+
+            return Response(course_serilize.data)
+        else:
+            return Response(course_serilize.errors)
     elif request.method == "DELETE":
         course.delete()
         return Response("course deleted", status=status.HTTP_204_NO_CONTENT)
